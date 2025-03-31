@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi YouTube Player</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        #videoContainer {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .video {
+            width: 45%;
+            aspect-ratio: 16 / 9;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>YouTube Multi-Player</h1>
+    <input type="text" id="youtubeUrl" placeholder="Enter YouTube URL" style="width: 300px;">
+    <input type="number" id="videoCount" min="1" max="10" value="2">
+    <button onclick="generateVideos()">Play</button>
+
+    <div id="videoContainer"></div>
+
+    <script>
+        function generateVideos() {
+            const urlInput = document.getElementById("youtubeUrl").value;
+            const count = document.getElementById("videoCount").value;
+            const container = document.getElementById("videoContainer");
+            container.innerHTML = "";
+
+            // Extract YouTube video ID from URL
+            const videoId = extractVideoId(urlInput);
+            if (!videoId) {
+                alert("Invalid YouTube URL");
+                return;
+            }
+
+            for (let i = 0; i < count; i++) {
+                const iframe = document.createElement("iframe");
+                iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+                iframe.classList.add("video");
+                iframe.allow = "autoplay; encrypted-media";
+                container.appendChild(iframe);
+            }
+        }
+
+        function extractVideoId(url) {
+            const match = url.match(/(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/ ]{11})/);
+            return match ? match[1] : null;
+        }
+    </script>
+
+</body>
+</html>
