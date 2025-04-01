@@ -8,6 +8,8 @@
         body {
             font-family: Arial, sans-serif;
             text-align: center;
+            position: relative;
+            transition: background 0.3s, color 0.3s;
         }
         #videoContainer {
             display: flex;
@@ -17,8 +19,29 @@
             margin-top: 20px;
         }
         .video {
-            width: 45%;
             aspect-ratio: 16 / 9;
+        }
+        #repeatCounter {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: black;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .controls {
+            margin-top: 10px;
+        }
+        button, select {
+            margin: 5px;
+            padding: 8px;
+            font-size: 14px;
+        }
+        .dark-mode {
+            background: #121212;
+            color: white;
         }
     </style>
 </head>
@@ -29,35 +52,130 @@
     <input type="number" id="videoCount" min="1" max="10" value="2">
     <button onclick="generateVideos()">Play</button>
 
+    <div class="controls">
+        <button onclick="toggleMute()">Mute/Unmute</button>
+        <select id="speedControl" onchange="changeSpeed()">
+            <option value="0.5">0.5x</option>
+            <option value="1" selected>1x</option>
+            <option value="1.5">1.5x</option>
+            <option value="2">2x</option>
+        </select>
+        <select id="layoutControl" onchange="changeLayout()">
+            <option value="2">2x2 Grid</option>
+            <option value="3">3x3 Grid</option>
+            <option value="1">Full Width</option>
+        </select>
+        <button onclick="toggleDarkMode()">Dark Mode</button>
+        <button onclick="toggleMusic()">Background Music</button>
+    </div>
+
+    <div id="repeatCounter">Repeats: 0</div>
     <div id="videoContainer"></div>
+    <audio id="bgMusic" loop>
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mp3">
+    </audio>
 
     <script>
+        let repeatCount = 0;
+        let videoElements = [];
+        let isMuted = false;
+        let isDarkMode = false;
+        let musicPlaying = false;
+
         function generateVideos() {
             const urlInput = document.getElementById("youtubeUrl").value;
             const count = document.getElementById("videoCount").value;
             const container = document.getElementById("videoContainer");
             container.innerHTML = "";
 
-            // Extract YouTube video ID from URL
             const videoId = extractVideoId(urlInput);
             if (!videoId) {
                 alert("Invalid YouTube URL");
                 return;
             }
 
+            videoElements = [];
+
             for (let i = 0; i < count; i++) {
+                const startTime = Math.floor(Math.random() * 60); // Random start time
                 const iframe = document.createElement("iframe");
-                iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+                iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&loop=1&playlist=${videoId}&start=${startTime}`;
                 iframe.classList.add("video");
                 iframe.allow = "autoplay; encrypted-media";
                 container.appendChild(iframe);
+                videoElements.push(iframe);
             }
+
+            startSyncPlayback();
+            saveSettings();
         }
 
         function extractVideoId(url) {
             const match = url.match(/(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/ ]{11})/);
             return match ? match[1] : null;
         }
+
+        function startSyncPlayback() {
+            setInterval(() => {
+                repeatCount++;
+                document.getElementById("repeatCounter").innerText = `Repeats: ${repeatCount}`;
+            }, 10000);
+        }
+
+        function toggleMute() {
+            isMuted = !isMuted;
+            videoElements.forEach(video => {
+                video.src = video.src + "&mute=" + (isMuted ? "1" : "0");
+            });
+        }
+
+        function changeSpeed() {
+            let speed = document.getElementById("speedControl").value;
+            videoElements.forEach(video => {
+                video.src = video.src + "&playsinline=1&speed=" + speed;
+            });
+        }
+
+        function changeLayout() {
+            let layout = document.getElementById("layoutControl").value;
+            videoElements.forEach(video => {
+                video.style.width = layout == "1" ? "100%" : layout == "2" ? "45%" : "30%";
+            });
+        }
+
+        function toggleDarkMode() {
+            isDarkMode = !isDarkMode;
+            document.body.classList.toggle("dark-mode", isDarkMode);
+            saveSettings();
+        }
+
+        function toggleMusic() {
+            let bgMusic = document.getElementById("bgMusic");
+            musicPlaying = !musicPlaying;
+            if (musicPlaying) {
+                bgMusic.play();
+            } else {
+                bgMusic.pause();
+            }
+        }
+
+        function saveSettings() {
+            localStorage.setItem("youtubeUrl", document.getElementById("youtubeUrl").value);
+            localStorage.setItem("videoCount", document.getElementById("videoCount").value);
+            localStorage.setItem("darkMode", isDarkMode);
+        }
+
+        function loadSettings() {
+            let savedUrl = localStorage.getItem("youtubeUrl");
+            let savedCount = localStorage.getItem("videoCount");
+            let savedDarkMode = localStorage.getItem("darkMode");
+
+            if (savedUrl) document.getElementById("youtubeUrl").value = savedUrl;
+            if (savedCount) document.getElementById("videoCount").value = savedCount;
+            if (savedDarkMode === "true") toggleDarkMode();
+        }
+
+        document.addEventListener("DOMContentLoaded", loadSettings);
     </script>
 
 </body>
