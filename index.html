@@ -8,150 +8,55 @@
         body {
             font-family: Arial, sans-serif;
             text-align: center;
-            background: #f5f5f5;
-            color: #333;
-            margin: 0;
-            padding: 20px;
-            transition: background 0.3s, color 0.3s;
-        }
-        h1 {
-            margin-bottom: 10px;
-        }
-        .container {
-            max-width: 900px;
-            margin: auto;
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-        }
-        .controls {
-            margin-bottom: 15px;
-        }
-        button, select, input {
-            padding: 8px;
-            margin: 5px;
-            font-size: 14px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            cursor: pointer;
         }
         #videoContainer {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
             gap: 10px;
-            margin-top: 10px;
+            margin-top: 20px;
         }
         .video {
-            width: 100%;
+            width: 45%;
             aspect-ratio: 16 / 9;
-            border-radius: 8px;
-        }
-        #repeatCounter {
-            font-size: 14px;
-            background: #000;
-            color: white;
-            padding: 5px 10px;
-            border-radius: 5px;
-            display: inline-block;
-            margin-top: 5px;
-        }
-        .dark-mode {
-            background: #121212;
-            color: white;
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>YouTube Multi-Player</h1>
+    <h1>YouTube Multi-Player</h1>
+    <input type="text" id="youtubeUrl" placeholder="Enter YouTube URL" style="width: 300px;">
+    <input type="number" id="videoCount" min="1" max="10" value="2">
+    <button onclick="generateVideos()">Play</button>
 
-        <div class="controls">
-            <input type="text" id="youtubeUrl" placeholder="Enter YouTube URL" style="width: 250px;">
-            <input type="number" id="videoCount" min="1" max="20" value="4">
-            <button onclick="generateVideos()">Play</button>
-        </div>
-
-        <div class="controls">
-            <button onclick="toggleMute()">Mute/Unmute</button>
-            <select id="speedControl" onchange="changeSpeed()">
-                <option value="0.5">0.5x</option>
-                <option value="1" selected>1x</option>
-                <option value="1.5">1.5x</option>
-                <option value="2">2x</option>
-            </select>
-            <button onclick="toggleDarkMode()">Dark Mode</button>
-        </div>
-
-        <div id="repeatCounter">Repeats: 0</div>
-
-        <div id="videoContainer"></div>
-    </div>
+    <div id="videoContainer"></div>
 
     <script>
-        let repeatCount = 0;
-        let videoElements = [];
-        let isMuted = false;
-        let isDarkMode = false;
-
         function generateVideos() {
             const urlInput = document.getElementById("youtubeUrl").value;
             const count = document.getElementById("videoCount").value;
             const container = document.getElementById("videoContainer");
             container.innerHTML = "";
 
+            // Extract YouTube video ID from URL
             const videoId = extractVideoId(urlInput);
             if (!videoId) {
                 alert("Invalid YouTube URL");
                 return;
             }
 
-            videoElements = [];
-
             for (let i = 0; i < count; i++) {
                 const iframe = document.createElement("iframe");
-                iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0&loop=1&playlist=${videoId}`;
+                iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
                 iframe.classList.add("video");
                 iframe.allow = "autoplay; encrypted-media";
                 container.appendChild(iframe);
-                videoElements.push(iframe);
             }
-
-            startSyncPlayback();
         }
 
         function extractVideoId(url) {
             const match = url.match(/(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/ ]{11})/);
             return match ? match[1] : null;
-        }
-
-        function startSyncPlayback() {
-            repeatCount = 0;
-            document.getElementById("repeatCounter").innerText = `Repeats: 0`;
-            setInterval(() => {
-                repeatCount++;
-                document.getElementById("repeatCounter").innerText = `Repeats: ${repeatCount}`;
-            }, 10000);
-        }
-
-        function toggleMute() {
-            isMuted = !isMuted;
-            videoElements.forEach(video => {
-                video.src = video.src.split("&mute=")[0] + `&mute=${isMuted ? "1" : "0"}`;
-            });
-        }
-
-        function changeSpeed() {
-            let speed = document.getElementById("speedControl").value;
-            videoElements.forEach(video => {
-                video.src = video.src.split("&speed=")[0] + `&speed=${speed}`;
-            });
-        }
-
-        function toggleDarkMode() {
-            isDarkMode = !isDarkMode;
-            document.body.classList.toggle("dark-mode", isDarkMode);
         }
     </script>
 
